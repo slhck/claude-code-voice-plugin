@@ -1,0 +1,11 @@
+{
+  "name": "voice-plugin-marketplace",
+  "owner": { "name": "Werner Robitza" },
+  "plugins": [
+    {
+      "name": "voice-plugin",
+      "source": "./",
+      "description": "Lets Claude talk to you via OpenAI text-to-speech. Toggle with /voice-plugin:enable and /voice-plugin:disable."
+    }
+  ]
+}

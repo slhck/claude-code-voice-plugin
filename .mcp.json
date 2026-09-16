@@ -1,0 +1,9 @@
+{
+  "voice": {
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/server/mcp.js"],
+    "env": {
+      "VOICE_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  }
+}
