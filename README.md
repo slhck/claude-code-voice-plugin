@@ -11,17 +11,32 @@ A completely vibe-coded Claude Code plugin that lets Claude talk to you out loud
 
 ## Setup
 
-Put your OpenAI API key in a `.env` file (see [Configuration](#configuration) for where) and load the plugin. For development or one-off use:
+Put your OpenAI API key in a `.env` file (see [Configuration](#configuration) for where).
+
+### Install from GitHub (recommended)
+
+Inside a Claude Code session, add this repo as a marketplace and install the plugin from it:
+
+```
+/plugin marketplace add slhck/claude-code-voice-plugin
+/plugin install voice-plugin@voice-plugin-marketplace
+```
+
+This installs it permanently; it stays available in future sessions. To update later, run `/plugin marketplace update voice-plugin-marketplace` followed by `/plugin update voice-plugin`.
+
+### Local development
+
+To try it out without installing, point Claude Code at a local checkout:
 
 ```bash
 claude --plugin-dir /path/to/claude-code-voice-plugin
 ```
 
-To install it permanently, add this directory as a local marketplace and install from it:
+Or add the local directory as a marketplace and install from it, the same way as the GitHub install above:
 
-```bash
-claude plugin marketplace add /path/to/claude-code-voice-plugin
-claude plugin install voice-plugin@voice-plugin-marketplace
+```
+/plugin marketplace add /path/to/claude-code-voice-plugin
+/plugin install voice-plugin@voice-plugin-marketplace
 ```
 
 To avoid a permission prompt on every spoken sentence, allow the plugin's tools in your settings (`~/.claude/settings.json` or the project's `.claude/settings.json`):
