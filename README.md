@@ -62,6 +62,8 @@ Everything is configured through environment variables. You can set them in your
 | `VOICE_TTS_SPEED`        | `1.0`             | Playback speed between 0.25 and 4.0.                                                                     |
 | `VOICE_PLAYER`           | (auto)            | Audio player command. Auto-detection order: ffplay, mpv, afplay, aplay, paplay. See below.               |
 
+To find a voice and test its malleability, you can use [openai.fm](https://www.openai.fm/).
+
 ### Via the shell
 
 Export the variables before starting Claude Code. The MCP server inherits the environment:
@@ -100,7 +102,7 @@ While in a session you can also say "use the cedar voice" or "talk faster", or p
 
 Runtime overrides take precedence over the shell and `.env` values. If you change your `.env` and the change does not seem to apply, an override is probably set. Check with `voice_status` (ask Claude "show voice status") and clear all overrides by asking Claude to reset the voice configuration (it calls `voice_configure` with `reset: true`), or delete the `overrides` entry from the state file.
 
-Precedence, highest first: runtime overrides, then shell environment, then `.env` files in the order listed above, then built-in defaults.
+Precedence is: runtime overrides, then shell environment, then `.env` files in the order listed above, then built-in defaults.
 
 ### Audio player
 
