@@ -5,7 +5,7 @@
     {
       "name": "voice-plugin",
       "source": "./",
-      "description": "Lets Claude talk to you via OpenAI text-to-speech. Toggle with /voice-plugin:enable and /voice-plugin:disable."
+      "description": "Lets Claude talk to you via OpenAI or Google Gemini text-to-speech. Toggle with /voice-plugin:enable and /voice-plugin:disable."
     }
   ]
 }

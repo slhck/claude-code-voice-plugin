@@ -1,13 +1,13 @@
 ---
-description: Turn on voice mode so Claude speaks its replies aloud (OpenAI TTS) and interviews the user conversationally. Use when the user asks to talk, speak, use voice, or be interviewed out loud.
-argument-hint: "[voice] [style instructions]"
+description: Turn on voice mode so Claude speaks its replies aloud (OpenAI or Google Gemini TTS) and interviews the user conversationally. Use when the user asks to talk, speak, use voice, or be interviewed out loud.
+argument-hint: "[provider] [voice] [style instructions]"
 ---
 
 # Enable voice mode
 
 Arguments given: "$ARGUMENTS"
 
-1. Call the `voice_enable` tool of the voice MCP server. If the arguments are non-empty: when the first word is one of the OpenAI voices (alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer, verse, marin, cedar), pass it as `voice`; pass any remaining text as `instructions` (speaking style). If the tool reports a missing API key or a playback error, tell the user in text and stop.
+1. Call the `voice_enable` tool of the voice MCP server. If the arguments are non-empty: when the first word is `openai`, `google` or `gemini`, pass it as `provider`. When the next word is a voice name (OpenAI: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer, verse, marin, cedar; Google Gemini: Kore, Puck, Zephyr, Charon, Fenrir, Leda, Orus, Aoede and others listed in the tool schema), pass it as `voice`; a voice selects its provider automatically. Pass any remaining text as `instructions` (speaking style). If the tool reports a missing API key or a playback error, tell the user in text and stop.
 
 2. From now on, until `/voice-plugin:disable` is run, follow these rules in every turn:
    - Speak your reply with the `speak` tool before ending the turn. The user answers by typing in the chat; there is no speech input, so never wait for audio.
