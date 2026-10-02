@@ -1,7 +1,7 @@
 {
   "name": "voice-plugin",
   "description": "Lets Claude talk to you via OpenAI or Google Gemini text-to-speech. Toggle with /voice-plugin:enable and /voice-plugin:disable.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Werner Robitza"
   },

@@ -9,12 +9,13 @@ import readline from "node:readline";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import {
-  PROVIDERS, ALL_VOICES, findVoice, apiKey, loadEnv, readState, writeState, effectiveConfig, STATE_FILE,
+  PROVIDERS, ALL_VOICES, findVoice, migrateModel, apiKey, loadEnv, readState, writeState, effectiveConfig, STATE_FILE,
 } from "./state.js";
+import { synthesizeOpenAI } from "./openai.js";
 
-const SERVER_INFO = { name: "voice-plugin", version: "0.2.0" };
+const SERVER_INFO = { name: "voice-plugin", version: "0.3.0" };
 const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
-const MAX_CHUNK = 4000; // OpenAI input limit is 4096 chars; Gemini allows 8192 tokens
+const MAX_CHUNK = 4000; // Keep individual utterances short; Gemini allows 8192 tokens
 
 loadEnv();
 
@@ -97,21 +98,7 @@ function requireKey(provider) {
 
 /** Return a readable stream of WAV audio for the text. */
 async function synthesize(text, cfg) {
-  return cfg.provider === "google" ? synthesizeGoogle(text, cfg) : synthesizeOpenAI(text, cfg);
-}
-
-async function synthesizeOpenAI(text, cfg) {
-  const key = requireKey("openai");
-  const body = { model: cfg.model, voice: cfg.voice, input: text, response_format: "wav" };
-  if (cfg.instructions && cfg.model.startsWith("gpt-")) body.instructions = cfg.instructions;
-  if (cfg.speed && cfg.speed !== 1) body.speed = cfg.speed;
-  const res = await fetch("https://api.openai.com/v1/audio/speech", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`OpenAI TTS error ${res.status}: ${(await res.text()).slice(0, 500)}`);
-  return Readable.fromWeb(res.body);
+  return cfg.provider === "google" ? synthesizeGoogle(text, cfg) : synthesizeOpenAI(text, cfg, requireKey("openai"));
 }
 
 /** Find the base64 audio data in a Gemini Interactions API response (usually steps[].content[] with type "audio"). */
@@ -182,7 +169,7 @@ function validateOverrides(o) {
     out.voice = found.voice;
   }
   if (o.model !== undefined) {
-    out.model = String(o.model);
+    out.model = migrateModel(String(o.model));
     const provider = Object.keys(PROVIDERS).find((k) => PROVIDERS[k].modelPrefixes.some((p) => out.model.startsWith(p)));
     if (!provider) throw new Error(`Unknown model "${out.model}".`);
     if (out.provider && out.provider !== provider) {
@@ -193,7 +180,7 @@ function validateOverrides(o) {
   if (o.instructions !== undefined) out.instructions = String(o.instructions);
   if (o.speed !== undefined) {
     const s = Number(o.speed);
-    if (!(s >= 0.25 && s <= 4)) throw new Error("speed must be between 0.25 and 4.0");
+    if (!(s >= 0.25 && s <= 1.5)) throw new Error("speed must be between 0.25 and 1.5");
     out.speed = s;
   }
   return out;
@@ -243,7 +230,7 @@ const TOOLS = [
             "Never use them with openai, which would read them aloud.",
         },
         voice: { type: "string", description: "Override the configured voice for this utterance only. Must belong to the configured provider." },
-        instructions: { type: "string", description: "Override the speaking style for this utterance only (tone, pace, emotion). Supported by gpt-4o-* and Gemini TTS models." },
+        instructions: { type: "string", description: "Override the speaking style for this utterance only (tone, pace, emotion). Supported by OpenAI Realtime and Gemini TTS models." },
       },
       required: ["text"],
     },
@@ -256,9 +243,9 @@ const TOOLS = [
       properties: {
         provider: { type: "string", enum: Object.keys(PROVIDERS), description: "TTS provider. Default: openai." },
         voice: { type: "string", enum: ALL_VOICES, description: "A voice of either provider; selects that provider." },
-        model: { type: "string", description: "e.g. gpt-4o-mini-tts, tts-1, tts-1-hd, gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts" },
+        model: { type: "string", description: "e.g. gpt-realtime-2.1-mini, gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts" },
         instructions: { type: "string", description: "Speaking style, e.g. 'warm, curious, slightly faster than normal'." },
-        speed: { type: "number", minimum: 0.25, maximum: 4 },
+        speed: { type: "number", minimum: 0.25, maximum: 1.5 },
       },
     },
   },
@@ -275,9 +262,9 @@ const TOOLS = [
       properties: {
         provider: { type: "string", enum: Object.keys(PROVIDERS), description: "openai or google. Switching resets voice and model to the provider's defaults unless given." },
         voice: { type: "string", enum: ALL_VOICES, description: "A voice of either provider; selects that provider." },
-        model: { type: "string", description: "e.g. gpt-4o-mini-tts, tts-1, tts-1-hd, gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts" },
+        model: { type: "string", description: "e.g. gpt-realtime-2.1-mini, gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts" },
         instructions: { type: "string" },
-        speed: { type: "number", minimum: 0.25, maximum: 4 },
+        speed: { type: "number", minimum: 0.25, maximum: 1.5 },
         reset: { type: "boolean" },
       },
     },

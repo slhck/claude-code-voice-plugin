@@ -10,12 +10,12 @@ export const PROVIDERS = {
   openai: {
     label: "OpenAI",
     keyVars: ["OPENAI_API_KEY"],
-    model: "gpt-4o-mini-tts",
-    modelPrefixes: ["gpt-", "tts-"],
+    model: "gpt-realtime-2.1-mini",
+    modelPrefixes: ["gpt-realtime-"],
     voice: "marin",
     voices: [
-      "alloy", "ash", "ballad", "coral", "echo", "fable", "nova",
-      "onyx", "sage", "shimmer", "verse", "marin", "cedar",
+      "alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer",
+      "verse", "marin", "cedar",
     ],
   },
   google: {
@@ -35,6 +35,12 @@ export const PROVIDERS = {
 };
 
 export const DEFAULT_PROVIDER = "openai";
+
+/** Resolve retired Speech API models from saved overrides and .env files. */
+export function migrateModel(model) {
+  return /^(?:tts-1(?:-hd)?|tts-hd|gpt-4o-mini-tts(?:-.*)?)$/.test(model)
+    ? PROVIDERS.openai.model : model;
+}
 
 /** All voice names of all providers, for tool schemas. */
 export const ALL_VOICES = Object.values(PROVIDERS).flatMap((p) => p.voices);
@@ -145,6 +151,7 @@ export function effectiveConfig(state = readState()) {
   const p = PROVIDERS[cfg.provider];
   const found = cfg.voice ? findVoice(cfg.voice) : null;
   cfg.voice = found && found.provider === cfg.provider ? found.voice : p.voice;
+  if (cfg.provider === "openai" && cfg.model) cfg.model = migrateModel(cfg.model);
   if (!cfg.model || !p.modelPrefixes.some((prefix) => cfg.model.startsWith(prefix))) cfg.model = p.model;
   return cfg;
 }
